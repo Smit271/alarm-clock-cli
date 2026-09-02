@@ -1201,7 +1201,16 @@ def test_snooze_refires_after_the_interval_and_can_be_repeated(store):
 
     assert ringer.rung == [alarm_id] * 3
     assert only(store).snoozed_until is None
-    assert only(store).last_fired == to_iso(datetime(2026, 9, 2, 7, 0))
+    # The answered snooze target is what was handled, not the original 07:00.
+    # It is still a scheduled time, never the wall-clock instant of the keypress.
+    assert only(store).last_fired == to_iso(datetime(2026, 9, 2, 7, 18))
+
+    # What actually matters: the recurrence is undisturbed and resumes tomorrow.
+    clock.advance(minutes=1)  # 07:19, nothing left today
+    assert watcher.tick() == []
+    clock.advance(days=1, minutes=-19)  # 2026-09-03 07:00:00 exactly
+    assert clock.now() == datetime(2026, 9, 3, 7, 0)
+    assert watcher.tick() == [alarm_id]
 
 
 def test_dismissing_a_one_off_disables_it_and_records_the_outcome(store):

@@ -60,8 +60,9 @@ Invariants:
 - `id` is unique within the store and is never reused after deletion.
 - `time` is stored to second precision so `alarm in 45s` is exact, but the CLI
   accepts and displays minute precision.
-- `last_fired` records the scheduled time of the occurrence that was handled,
-  not the wall-clock moment it was answered. This is what makes an occurrence
+- `last_fired` records the scheduled time that was handled — the occurrence
+  itself, or the snooze target when the alarm was answered after snoozing. It
+  is never the wall-clock moment of the keypress. This is what makes an occurrence
   handled-exactly-once, and it is the field that stops a dismissed alarm from
   ringing again on the next tick.
 - `outcome` is only ever set on a one-off. A recurring alarm has no terminal
