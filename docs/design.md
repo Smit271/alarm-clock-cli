@@ -97,10 +97,10 @@ core of the tool and the most heavily tested unit.
 Callers supply `after` rather than the function reading the clock, which is
 what lets the same function serve two different questions:
 
-- **The watcher** passes `after = last_fired` (or datetime.min when unset), so
-  it sees the earliest occurrence *not yet handled* — including one that is
-  already in the past, which is precisely how a due or missed alarm is
-  detected.
+- **The watcher** passes `after = last_fired`, falling back to `created_at`
+  when the alarm has never fired, so it sees the earliest occurrence *not yet
+  handled* — including one already in the past, which is precisely how a due or
+  missed alarm is detected.
 - **The listing** passes `after = max(last_fired, now)`, so it shows the next
   genuinely upcoming time and never advertises a moment that has gone.
 
@@ -121,8 +121,10 @@ occurrence handled.
 
 1. Reload the store from disk.
 2. For each alarm, if `snoozed_until` is set, that is the target; otherwise the
-   target is `next_occurrence(alarm, after=last_fired or datetime.min)` — the
-   earliest occurrence not yet handled.
+   target is `next_occurrence(alarm, after=last_fired or created_at)` — the
+   earliest occurrence not yet handled. `created_at` is the floor for an alarm
+   that has never fired, because an occurrence from before the alarm existed
+   was never missed and must not be reported as such.
 3. A target is **due** if `target <= now < target + grace`, where grace is 5
    minutes. Ring the alarm with the earliest due target.
 4. A target older than the grace window is **missed**. Either way — rung and
